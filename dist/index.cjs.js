@@ -11,10 +11,10 @@ var vuexEasyAccess = require('vuex-easy-access');
 var isWhat = require('is-what');
 var copy = _interopDefault(require('copy-anything'));
 var mergeAnything = require('merge-anything');
+var filter = _interopDefault(require('filter-anything'));
 var flatten = _interopDefault(require('flatten-anything'));
 var compareAnything = require('compare-anything');
 var findAndReplaceAnything = require('find-and-replace-anything');
-var filter = _interopDefault(require('filter-anything'));
 
 var defaultConfig = {
     firestorePath: '',
@@ -1640,7 +1640,12 @@ function pluginActions (Firebase) {
                 value.id = id;
             // define the firestore update
             function firestoreUpdateFn(_val) {
-                return dispatch('patchDoc', { id: id, doc: copy(_val) });
+                var willStay = filter(_val, getters.fillables, getters.guard);
+                // disable firestore update if only one prop (id) left after filtering guards and fillables
+                if (Object.keys(willStay).length === 1)
+                    return;
+                else
+                    return dispatch('patchDoc', { id: id, doc: copy(_val) });
             }
             // define the store update
             function storeUpdateFn(_val) {

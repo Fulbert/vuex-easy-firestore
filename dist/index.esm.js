@@ -5,10 +5,10 @@ import { getDeepRef, getKeysFromPath } from 'vuex-easy-access';
 import { isAnyObject, isPlainObject, isArray, isFunction, isNumber, isString, isDate } from 'is-what';
 import copy from 'copy-anything';
 import { merge } from 'merge-anything';
+import filter from 'filter-anything';
 import flatten from 'flatten-anything';
 import { compareObjectProps } from 'compare-anything';
 import { findAndReplace, findAndReplaceIf } from 'find-and-replace-anything';
-import filter from 'filter-anything';
 
 var defaultConfig = {
     firestorePath: '',
@@ -1634,7 +1634,12 @@ function pluginActions (Firebase) {
                 value.id = id;
             // define the firestore update
             function firestoreUpdateFn(_val) {
-                return dispatch('patchDoc', { id: id, doc: copy(_val) });
+                var willStay = filter(_val, getters.fillables, getters.guard);
+                // disable firestore update if only one prop (id) left after filtering guards and fillables
+                if (Object.keys(willStay).length === 1)
+                    return;
+                else
+                    return dispatch('patchDoc', { id: id, doc: copy(_val) });
             }
             // define the store update
             function storeUpdateFn(_val) {

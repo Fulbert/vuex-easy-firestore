@@ -1,4 +1,5 @@
 import { isArray, isPlainObject, isFunction, isNumber } from 'is-what'
+import filter from 'filter-anything'
 import copy from 'copy-anything'
 import { merge } from 'merge-anything'
 import flatten from 'flatten-anything'
@@ -906,7 +907,14 @@ export default function (Firebase: any): AnyObject {
       if (!value.id) value.id = id
       // define the firestore update
       function firestoreUpdateFn (_val) {
-        return dispatch('patchDoc', { id, doc: copy(_val) })
+        const willStay = filter(
+          _val,
+          getters.fillables,
+          getters.guard
+        )
+        // disable firestore update if only one prop (id) left after filtering guards and fillables
+        if (Object.keys(willStay).length === 1) return
+        else return dispatch('patchDoc', { id, doc: copy(_val) })
       }
       // define the store update
       function storeUpdateFn (_val) {
